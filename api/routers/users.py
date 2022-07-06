@@ -1,7 +1,7 @@
-from db import UserQueries
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
+from db import UserQueries
 
 router = APIRouter()
 
