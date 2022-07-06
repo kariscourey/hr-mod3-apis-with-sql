@@ -5,17 +5,17 @@ DROP TABLE IF EXISTS trucks;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-    id INTEGER NOT NULL UNIQUE,
+    id SERIAL NOT NULL UNIQUE,
     first TEXT NOT NULL,
     last TEXT NOT NULL,
     avatar TEXT NOT NULL,
-    email TEXT NOT NULL,
-    username TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
     referrer_id INTEGER REFERENCES users("id") ON DELETE CASCADE
 );
 
 CREATE TABLE trucks (
-    id INTEGER NOT NULL UNIQUE,
+    id SERIAL NOT NULL UNIQUE,
     name TEXT NOT NULL,
     website TEXT NOT NULL,
     category TEXT NOT NULL check(category = 'American' or category = 'Asian' or category = 'French' or category = 'Mediterranean' or category = 'Indian' or category = 'Italian' or category = 'Latin'),
@@ -24,13 +24,13 @@ CREATE TABLE trucks (
 );
 
 CREATE TABLE menu_items (
-    id INTEGER NOT NULL UNIQUE,
+    id SERIAL NOT NULL UNIQUE,
     name TEXT NOT NULL,
     calories INTEGER NOT NULL
 );
 
 CREATE TABLE reviews (
-    id INTEGER NOT NULL UNIQUE,
+    id SERIAL NOT NULL UNIQUE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     reviewer_id INTEGER REFERENCES users("id") ON DELETE CASCADE,
@@ -161,3 +161,9 @@ INSERT INTO reviews VALUES
   (23, 'good', '[ 170.555779] Call Trace:\n [ 170.558221] [<ffffffff816045b6>] dump_stack+0x19/0x1b\n [ 170.563346] [<ffffffff8106e29b>] warn_slowpath_common+0x6b/0xb0\n [ 170.569336] [<ffffffff8106e3ea>] warn_slowpath_null+0x1a/0x20\n [ 170.575153] [<ffffffff814a352d>] cpufreq_update_policy+0x1dd/0x1f0\n [ 170.581403] [<ffffffff814a3540>] ? cpufreq_update_policy+0x1f0/0x1f0\n [ 170.587827] [<ffffffff8136d40b>] cpufreq_set_cur_state.part.3+0x8c/0x95\n [ 170.594510] [<ffffffff8136d4b5>] processor_set_cur_state+0xa1/0xdb\n [ 170.600761] [<ffffffff8148a1e5>] thermal_cdev_update+0x95/0xb0\n [ 170.606664] [<ffffffff8148c849>] step_wise_throttle+0x59/0x90\n [ 170.612480] [<ffffffff8148aaeb>] handle_thermal_trip+0x5b/0x160', 7, 4, 11),
   (24, 'serious foodie', 'The exterior decor is very warm and welcoming, and the staff greeted me with aplomb', 5, 5, 6)
   ;
+
+
+SELECT setval('users_id_seq', (SELECT MAX(id) + 1 FROM users));
+SELECT setval('trucks_id_seq', (SELECT MAX(id) + 1 FROM trucks));
+SELECT setval('menu_items_id_seq', (SELECT MAX(id) + 1 FROM menu_items));
+SELECT setval('reviews_id_seq', (SELECT MAX(id) + 1 FROM reviews));
