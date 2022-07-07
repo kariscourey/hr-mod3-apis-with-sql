@@ -6,6 +6,29 @@ pool = ConnectionPool(conninfo=os.environ["DATABASE_URL"])
 
 
 class TruckQueries:
+    def get_trucks(self):
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT u.id AS user_id, u.first, u.last,
+                        u.avatar, u.email, u.username,
+                        t.id AS truck_id, t.name,
+                        t.website, t.category,
+                        t.vegetarian_friendly
+                    FROM users u
+                    JOIN trucks t ON(u.id = t.owner_id)
+                    ORDER BY t.name
+                    """,
+                )
+
+                trucks = []
+                rows = cur.fetchall()
+                for row in rows:
+                    truck = self.truck_record_to_dict(row, cur.description)
+                    trucks.append(truck)
+                return trucks
+
     def get_truck(self, truck_id):
         with pool.connection() as conn:
             with conn.cursor() as cur:
@@ -23,39 +46,79 @@ class TruckQueries:
                     [truck_id],
                 )
 
-                truck = None
                 row = cur.fetchone()
+                return self.truck_record_to_dict(row, cur.description)
 
-                if row is not None:
-                    truck = {}
-                    truck_fields = [
-                        "truck_id",
-                        "name",
-                        "website",
-                        "category",
-                        "vegetarian_friendly",
-                    ]
-                    for i, column in enumerate(cur.description):
-                        if column.name in truck_fields:
-                            truck[column.name] = row[i]
-                    truck["id"] = truck["truck_id"]
+    def delete_truck(self, truck_id):
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    DELETE FROM trucks
+                    WHERE id = %s
+                    """,
+                    [truck_id],
+                )
 
-                    owner = {}
-                    owner_fields = [
-                        "user_id",
-                        "first",
-                        "last",
-                        "avatar",
-                        "email",
-                        "username",
-                    ]
-                    for i, column in enumerate(cur.description):
-                        if column.name in owner_fields:
-                            owner[column.name] = row[i]
-                    owner["id"] = owner["user_id"]
 
-                    truck["owner"] = owner
-                return truck
+    def create_truck(self, truck):
+        id = None
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO trucks (
+                        name, website, category, vegetarian_friendly, owner_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id
+                    """,
+                    [
+                        truck.name,
+                        truck.website,
+                        truck.category,
+                        truck.vegetarian_friendly,
+                        truck.owner_id,
+                    ],
+                )
+
+                row = cur.fetchone()
+                id = row[0]
+        if id is not None:
+            return self.get_truck(id)
+
+    def truck_record_to_dict(self, row, description):
+        truck = None
+        if row is not None:
+            truck = {}
+            truck_fields = [
+                "truck_id",
+                "name",
+                "website",
+                "category",
+                "vegetarian_friendly",
+            ]
+            for i, column in enumerate(description):
+                if column.name in truck_fields:
+                    truck[column.name] = row[i]
+            truck["id"] = truck["truck_id"]
+
+            owner = {}
+            owner_fields = [
+                "user_id",
+                "first",
+                "last",
+                "avatar",
+                "email",
+                "username",
+            ]
+            for i, column in enumerate(description):
+                if column.name in owner_fields:
+                    owner[column.name] = row[i]
+            owner["id"] = owner["user_id"]
+
+            truck["owner"] = owner
+        return truck
 
 
 class UserQueries:
