@@ -40,9 +40,11 @@ class TruckOut(BaseModel):
     vegetarian_friendly: bool
     owner: UserOut
 
+class TruckWithPriceOut(TruckOut):
+    average_price: float | None
 
 class TrucksOut(BaseModel):
-    trucks: list[TruckOut]
+    trucks: list[TruckWithPriceOut]
 
 
 @router.get("/api/trucks/{truck_id}", response_model=TruckOut)

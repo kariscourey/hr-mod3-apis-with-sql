@@ -15,9 +15,20 @@ class TruckQueries:
                         u.avatar, u.email, u.username,
                         t.id AS truck_id, t.name,
                         t.website, t.category,
-                        t.vegetarian_friendly
+                        t.vegetarian_friendly,
+
+                        AVG(tmi.price) as average_price
+
                     FROM users u
                     JOIN trucks t ON(u.id = t.owner_id)
+                    LEFT OUTER JOIN truck_menu_items tmi ON (t.id = tmi.truck_id)
+
+                    GROUP BY
+                        u.id, u.first, u.last,
+                        u.avatar, u.email, u.username,
+                        t.id, t.name, t.website, t.category,
+                        t.vegetarian_friendly
+
                     ORDER BY t.name
                     """,
                 )
@@ -97,6 +108,7 @@ class TruckQueries:
                 "website",
                 "category",
                 "vegetarian_friendly",
+                "average_price",
             ]
             for i, column in enumerate(description):
                 if column.name in truck_fields:
